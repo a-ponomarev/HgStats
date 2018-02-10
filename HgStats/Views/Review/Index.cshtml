@@ -76,11 +76,11 @@ d3.csv("/Review/Data", type, function(error, data) {
 
   // Compute a unique index for each country.
   data.forEach(function(d) {
-    if (countryByName.has(d.creditor)) d.creditor = countryByName.get(d.creditor);
-    else countryByName.set(d.creditor, d.creditor = {name: d.creditor, index: ++countryIndex});
-    if (countryByName.has(d.debtor)) d.debtor = countryByName.get(d.debtor);
-    else countryByName.set(d.debtor, d.debtor = {name: d.debtor, index: ++countryIndex});
-    d.debtor.risk = d.risk;
+    if (countryByName.has(d.author)) d.author = countryByName.get(d.author);
+    else countryByName.set(d.author, d.author = {name: d.author, index: ++countryIndex});
+    if (countryByName.has(d.review)) d.review = countryByName.get(d.review);
+    else countryByName.set(d.review, d.review = {name: d.review, index: ++countryIndex});
+    d.review.risk = d.risk;
   });
 
   // Initialize a square matrix of debits and credits.
@@ -95,10 +95,10 @@ d3.csv("/Review/Data", type, function(error, data) {
 
   // Populate the matrices, and stash a map from index to country.
   data.forEach(function(d) {
-    debits[d.creditor.index][d.debtor.index] = d;
-    credits[d.debtor.index][d.creditor.index] = d;
-    countryByIndex[d.creditor.index] = d.creditor;
-    countryByIndex[d.debtor.index] = d.debtor;
+    debits[d.author.index][d.review.index] = d;
+    credits[d.review.index][d.author.index] = d;
+    countryByIndex[d.author.index] = d.author;
+    countryByIndex[d.review.index] = d.review;
   });
 
   // For each diagram…
@@ -117,7 +117,7 @@ d3.csv("/Review/Data", type, function(error, data) {
         .style("stroke", function(d) { return d3.rgb(fill(d.source.value.risk)).darker(); })
         .attr("d", chord)
       .append("title")
-        .text(function(d) { return d.source.value.debtor.name + " owes " + d.source.value.creditor.name + " $" + format(d.source.value) + "B."; });
+        .text(function(d) { return d.source.value.review.name + " reviewed " + d.source.value.author.name + " " + format(d.source.value) + " times"; });
 
     // Add groups.
     var g = svg.selectAll(".group")
@@ -131,7 +131,7 @@ d3.csv("/Review/Data", type, function(error, data) {
         .attr("id", function(d, i) { return "group" + d.index + "-" + j; })
         .attr("d", arc)
       .append("title")
-        .text(function(d) { return countryByIndex[d.index].name + " " + (j ? "owes" : "is owed") + " $" + format(d.value) + "B."; });
+        .text(function(d) { return countryByIndex[d.index].name + " " + (j ? "reviewed" : "was reviewed") + " " + format(d.value) + "times"; });
 
     // Add the group label (but only for large groups, where it will fit).
     // An alternative labeling mechanism would be nice for the small groups.

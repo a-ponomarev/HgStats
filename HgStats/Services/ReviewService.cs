@@ -22,7 +22,7 @@ namespace HgStats.Services
                 .Select(g => (author: g.Key.author, review: g.Key.review, count: g.Count()))
                 .Where(i => i.count > 1); // todo использовать список коммитеров
             
-            var header = $"creditor,debtor,amount,risk{Environment.NewLine}";
+            var header = $"author,review,amount,risk{Environment.NewLine}";
             return header + string.Join(Environment.NewLine, info.Select(i => $"{i.author},{i.review},{i.count},0"));
         }
 
