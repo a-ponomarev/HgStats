@@ -12,7 +12,8 @@ namespace HgStats
             routes.MapRoute(
                 "Default",
                 "{controller}/{action}/{id}",
-                new {controller = "Review", action = "Index", id = UrlParameter.Optional}
+                new {controller = "Review", action = "Index", id = UrlParameter.Optional},
+                new[] {"HgStats.Controllers"}
             );
         }
     }

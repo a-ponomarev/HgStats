@@ -138,7 +138,6 @@ d3.csv("/Review/Data", type, function(error, data) {
     g.append("text")
         .attr("x", 6)
         .attr("dy", 15)
-        .filter(function(d) { return d.value > 110; })
       .append("textPath")
         .attr("xlink:href", function(d) { return "#group" + d.index + "-" + j; })
         .text(function(d) { return countryByIndex[d.index].name; });
