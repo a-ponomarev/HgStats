@@ -1,159 +1,164 @@
 ﻿<!DOCTYPE html>
 <meta charset="utf-8">
 <style>
+    .group text {
+        font: 11px sans-serif;
+        pointer-events: none;
+    }
 
-.group text {
-  font: 11px sans-serif;
-  pointer-events: none;
-}
+    .group path {
+        stroke: #000;
+    }
 
-.group path {
-  stroke: #000;
-}
-
-path.chord {
-  stroke-width: .75;
-  fill-opacity: .75;
-}
-
+    path.chord {
+        stroke-width: .75;
+        fill-opacity: .75;
+    }
 </style>
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
+    const width = 900;
+    const height = 900;
+    const outerRadius = Math.min(width, height) / 2 - 4;
+    const innerRadius = outerRadius - 20;
 
-var width = 700,
-    height = 700,
-    outerRadius = Math.min(width, height) / 2 - 4,
-    innerRadius = outerRadius - 20;
+    var format = d3.format(",.3r");
 
-var format = d3.format(",.3r");
+    // Square matrices, asynchronously loaded; credits is the transpose of debits.
+    var commitsToReview = [],
+        reviewToCommits = [];
 
-// Square matrices, asynchronously loaded; credits is the transpose of debits.
-var debits = [],
-    credits = [];
+    // The chord layout, for computing the angles of chords and groups.
+    var layout = d3.layout.chord()
+        .sortGroups(d3.descending)
+        .sortSubgroups(d3.descending)
+        .sortChords(d3.descending)
+        .padding(.04);
 
-// The chord layout, for computing the angles of chords and groups.
-var layout = d3.layout.chord()
-    .sortGroups(d3.descending)
-    .sortSubgroups(d3.descending)
-    .sortChords(d3.descending)
-    .padding(.04);
+    // The color scale, for different categories of “worrisome” risk.
+    var colors = ["#dbe9d8", "#c2d4d8", "#f2efe8", "#b0aac2"];
+    var fill = d3.scale.ordinal()
+        .domain(d3.range(colors.length))
+        .range(colors);
 
-// The color scale, for different categories of “worrisome” risk.
-var colors = ["#dbe9d8", "#c2d4d8", "#f2efe8", "#b0aac2"];
-var fill = d3.scale.ordinal()
-    .domain(d3.range(colors.length))
-    .range(colors);
+    // The arc generator, for the groups.
+    var arc = d3.svg.arc()
+        .innerRadius(innerRadius)
+        .outerRadius(outerRadius);
 
-// The arc generator, for the groups.
-var arc = d3.svg.arc()
-    .innerRadius(innerRadius)
-    .outerRadius(outerRadius);
+    // The chord generator (quadratic Bézier), for the chords.
+    var chord = d3.svg.chord()
+        .radius(innerRadius);
 
-// The chord generator (quadratic Bézier), for the chords.
-var chord = d3.svg.chord()
-    .radius(innerRadius);
+    // Add an SVG element for each diagram, and translate the origin to the center.
+    var svg = d3.select("body").selectAll("div")
+        .data([commitsToReview, reviewToCommits])
+        .enter().append("div")
+        .style("display", "inline-block")
+        .style("width", `${width}px`)
+        .style("height", `${height}px`)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${width / 2},${height / 2})`);
 
-// Add an SVG element for each diagram, and translate the origin to the center.
-var svg = d3.select("body").selectAll("div")
-    .data([debits, credits])
-  .enter().append("div")
-    .style("display", "inline-block")
-    .style("width", width + "px")
-    .style("height", height + "px")
-  .append("svg")
-    .attr("width", width)
-    .attr("height", height)
-  .append("g")
-    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+    // Load our data file…
+    d3.csv("/Review/Data", type, function(error, data) {
+            if (error) throw error;
 
-// Load our data file…
-d3.csv("/Review/Data", type, function(error, data) {
-  if (error) throw error;
+            var personByName = d3.map(),
+                personIndex = -1,
+                personByIndex = [];
 
-  var countryByName = d3.map(),
-      countryIndex = -1,
-      countryByIndex = [];
+            // Compute a unique index for each country.
+        data.forEach(function(d) {
+            if (personByName.has(d.author)) {
+                d.author = personByName.get(d.author);
+            } else {
+                personByName.set(d.author, d.author = { name: d.author, index: ++personIndex });
+            }
 
-  // Compute a unique index for each country.
-  data.forEach(function(d) {
-    if (countryByName.has(d.author)) d.author = countryByName.get(d.author);
-    else countryByName.set(d.author, d.author = {name: d.author, index: ++countryIndex});
-    if (countryByName.has(d.review)) d.review = countryByName.get(d.review);
-    else countryByName.set(d.review, d.review = {name: d.review, index: ++countryIndex});
-    d.review.risk = d.risk;
-  });
+            if (personByName.has(d.review)) {
+                d.review = personByName.get(d.review);
+            } else {
+                personByName.set(d.review, d.review = { name: d.review, index: ++personIndex });
+            }
+            d.review.risk = d.risk;
+        });
 
-  // Initialize a square matrix of debits and credits.
-  for (var i = 0; i <= countryIndex; i++) {
-    debits[i] = [];
-    credits[i] = [];
-    for (var j = 0; j <= countryIndex; j++) {
-      debits[i][j] = 0;
-      credits[i][j] = 0;
+            // Initialize a square matrix of debits and credits.
+            for (let i = 0; i <= personIndex; i++) {
+                commitsToReview[i] = [];
+                reviewToCommits[i] = [];
+                for (let j = 0; j <= personIndex; j++) {
+                    commitsToReview[i][j] = 0;
+                    reviewToCommits[i][j] = 0;
+                }
+            }
+
+            // Populate the matrices, and stash a map from index to country.
+            data.forEach(function(d) {
+                commitsToReview[d.author.index][d.review.index] = d;
+                reviewToCommits[d.review.index][d.author.index] = d;
+                personByIndex[d.author.index] = d.author;
+                personByIndex[d.review.index] = d.review;
+            });
+
+            // For each diagram…
+            svg.each(function(matrix, j) {
+                const svg = d3.select(this);
+
+                // Compute the chord layout.
+                layout.matrix(matrix);
+
+                // Add chords.
+                svg.selectAll(".chord")
+                    .data(layout.chords)
+                    .enter().append("path")
+                    .attr("class", "chord")
+                    .style("fill", d => fill(d.source.value.amount % colors.length))
+                    .style("stroke", d => d3.rgb(fill(d.source.value.amount % colors.length)).darker())
+                    .attr("d", chord)
+                    .append("title")
+                    .text(d => `${d.source.value.review.name} reviewed ${d.source.value.author.name} ${format(d.source.value)} times`);
+
+                // Add groups.
+                const g = svg.selectAll(".group")
+                    .data(layout.groups)
+                    .enter()
+                    .append("g")
+                    .attr("class", "group");
+
+                // Add the group arc.
+                g.append("path")
+                    .style("fill", d => fill(personByIndex[d.index].amount % colors.length))
+                    .attr("id", d => `group${d.index}-${j}`)
+                    .attr("d", arc)
+                    .append("title")
+                    .text(d => `${personByIndex[d.index].name} ${j ? "reviewed" : "was reviewed"} ${format(d.value)}times`);
+
+                // Add the group label (but only for large groups, where it will fit).
+                // An alternative labeling mechanism would be nice for the small groups.
+                g.append("text")
+                    .attr("x", 6)
+                    .attr("dy", 15)
+                    .append("textPath")
+                    .attr("xlink:href", d => `#group${d.index}-${j}`)
+                    .text(d => personByIndex[d.index].name);
+            });
+        });
+
+    function type(d) {
+        d.amount = +d.amount;
+        d.risk = +d.risk;
+        d.valueOf = value; // for chord layout
+        return d;
     }
-  }
 
-  // Populate the matrices, and stash a map from index to country.
-  data.forEach(function(d) {
-    debits[d.author.index][d.review.index] = d;
-    credits[d.review.index][d.author.index] = d;
-    countryByIndex[d.author.index] = d.author;
-    countryByIndex[d.review.index] = d.review;
-  });
-
-  // For each diagram…
-  svg.each(function(matrix, j) {
-    var svg = d3.select(this);
-
-    // Compute the chord layout.
-    layout.matrix(matrix);
-
-    // Add chords.
-    svg.selectAll(".chord")
-        .data(layout.chords)
-      .enter().append("path")
-        .attr("class", "chord")
-        .style("fill", function(d) { return fill(d.source.value.amount % colors.length); })
-        .style("stroke", function(d) { return d3.rgb(fill(d.source.value.amount % colors.length)).darker(); })
-        .attr("d", chord)
-      .append("title")
-        .text(function(d) { return d.source.value.review.name + " reviewed " + d.source.value.author.name + " " + format(d.source.value) + " times"; });
-
-    // Add groups.
-    var g = svg.selectAll(".group")
-        .data(layout.groups)
-      .enter().append("g")
-        .attr("class", "group");
-
-    // Add the group arc.
-    g.append("path")
-        .style("fill", function(d) { return fill(countryByIndex[d.index].amount % colors.length); })
-        .attr("id", function(d, i) { return "group" + d.index + "-" + j; })
-        .attr("d", arc)
-      .append("title")
-        .text(function(d) { return countryByIndex[d.index].name + " " + (j ? "reviewed" : "was reviewed") + " " + format(d.value) + "times"; });
-
-    // Add the group label (but only for large groups, where it will fit).
-    // An alternative labeling mechanism would be nice for the small groups.
-    g.append("text")
-        .attr("x", 6)
-        .attr("dy", 15)
-      .append("textPath")
-        .attr("xlink:href", function(d) { return "#group" + d.index + "-" + j; })
-        .text(function(d) { return countryByIndex[d.index].name; });
-  });
-});
-
-function type(d) {
-  d.amount = +d.amount;
-  d.risk = +d.risk;
-  d.valueOf = value; // for chord layout
-  return d;
-}
-
-function value() {
-  return this.amount;
-}
+    function value() {
+        return this.amount;
+    }
 
 </script>
