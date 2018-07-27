@@ -9,7 +9,7 @@ namespace HgStats.Services
 {
     public static class ReviewService
     {
-        private const string authorPrefix = "author:";
+        private static readonly string authorPrefix = Guid.NewGuid().ToString();
         private const string reviewPrefix = "review:";
         private const string border = "-------";
         private const string newLine = @"\n";
@@ -21,10 +21,10 @@ namespace HgStats.Services
         public static string GetData()
         {
             var commits = GetCommits();
-            var info = commits.SelectMany(c => c.Review.Select(r => (author:c.Author, review:r)))
-                .GroupBy(p => p)
-                .Select(g => (author: g.Key.author, review: g.Key.review, count: g.Count()))
-                .Where(i => i.count > 1); // todo использовать список коммитеров
+            var info = commits
+                       .SelectMany(c => c.Review.Select(r => new { author = c.Author, review = r }))
+                       .GroupBy(p => p)
+                       .Select(g => new { g.Key.author, g.Key.review, count = g.Count() });
 
             var header = $"author,review,amount,risk{Environment.NewLine}";
             return header + string.Join(Environment.NewLine, info.Select(i => $"{i.author},{i.review},{i.count},0"));
