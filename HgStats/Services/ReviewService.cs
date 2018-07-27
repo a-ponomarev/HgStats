@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using HgStats.Helpers;
 
@@ -12,7 +11,6 @@ namespace HgStats.Services
         private const string reviewPrefix = "review:";
         private const string border = "-------";
         private const string newLine = @"\r\n";
-        private const string rawFile = "raw.txt";
         
         public static string GetData()
         {
@@ -28,10 +26,10 @@ namespace HgStats.Services
 
         private static List<Commit> GetCommits()
         {
-            var dateRange = $"-d \"jan 2018 to now\" ";
-            var command = $"hg log {dateRange} -T \"{authorPrefix}{{author}}{newLine}{{desc}}{newLine}{border}{newLine}\" > {rawFile}";
-            CmdHelper.Run(command);
-            var log = File.ReadAllLines(rawFile); 
+            var dateRange = "-d \"jan 2018 to now\" ";
+
+            var command = $"hg log {dateRange} -T \"{authorPrefix}{{author}}{newLine}{{desc}}{newLine}{border}{newLine}\"";
+            var log = CmdHelper.RunViaFile(command);
 
             var commits = new List<Commit>();
             var current = new Commit();
