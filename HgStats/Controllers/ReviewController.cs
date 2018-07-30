@@ -5,6 +5,13 @@ namespace HgStats.Controllers
 {
     public class ReviewController : Controller
     {
+        private readonly ReviewService reviewService;
+
+        public ReviewController()
+        {
+            reviewService = new ReviewService();
+        }
+
         public ActionResult Index()
         {
             return View();
@@ -12,7 +19,7 @@ namespace HgStats.Controllers
 
         public ActionResult Data()
         {
-            return Content(ReviewService.GetData());
+            return Content(reviewService.GetData());
         }
     }
 }
