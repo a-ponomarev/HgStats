@@ -15,6 +15,7 @@ namespace HgStats.Services
         private const string newLine = @"\n";
 
         private readonly string hgRoot;
+        private readonly Dictionary<string, string> map;
         private string CD => $"cd {hgRoot}";
 
         public ReviewService()
@@ -23,6 +24,9 @@ namespace HgStats.Services
             var assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
             hgRoot = CmdHelper.Run($"cd {assemblyDir}", "hg root").First();
+            map = File.ReadAllLines(Path.Combine(hgRoot, "authormap.txt"))
+                      .Select(l => l.Split('='))
+                      .ToDictionary(x => x[0], x => x[1]);
         }
 
         public string GetData()
@@ -49,11 +53,13 @@ namespace HgStats.Services
             foreach (var line in log)
             {
                 if (line.StartsWith(authorPrefix))
-                    current.Author = line
-                                     .Replace(authorPrefix, string.Empty)
-                                     .Split('<')
-                                     .First()
-                                     .Trim();
+                {
+                    var currentAuthor = line.Replace(authorPrefix, string.Empty).Trim();
+                    if (map.ContainsKey(currentAuthor))
+                        currentAuthor = map[currentAuthor];
+
+                    current.Author = currentAuthor;
+                }
 
                 if (line.StartsWith(reviewPrefix))
                     current.Reviewers = line
