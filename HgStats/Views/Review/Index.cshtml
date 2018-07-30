@@ -10,7 +10,7 @@
         stroke: #000;
     }
 
-    path.chord {
+    .chord {
         stroke-width: .75;
         fill-opacity: .75;
     }
@@ -136,6 +136,8 @@
                     .style("fill", d => fill(personByIndex[d.index].amount % colors.length))
                     .attr("id", d => `group${d.index}-${j}`)
                     .attr("d", arc)
+                    .on("mouseover", fade(.1))
+                    .on("mouseout", fade(1))
                     .append("title")
                     .text(d => `${personByIndex[d.index].name} ${j ? "reviewed" : "was reviewed"} ${format(d.value)}times`);
 
@@ -161,4 +163,12 @@
         return this.amount;
     }
 
+    function fade(opacity) {
+        return function(g, i) {
+            svg.selectAll(".chord")
+                .filter(d => d.source.index != i && d.target.index != i)
+                .transition()
+                .style("opacity", opacity);
+        }
+    }
 </script>
