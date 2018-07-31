@@ -15,7 +15,9 @@ namespace HgStats.Services
         private const string newLine = @"\n";
 
         private readonly string hgRoot;
-        private readonly Dictionary<string, string> map;
+        private readonly Dictionary<string, string> authorMap;
+        private readonly Dictionary<string, string> reviewerMap;
+        private readonly HashSet<string> authors;
         private string CD => $"cd {hgRoot}";
 
         public ReviewService()
@@ -24,9 +26,14 @@ namespace HgStats.Services
             var assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
             hgRoot = CmdHelper.Run($"cd {assemblyDir}", "hg root").First();
-            map = File.ReadAllLines(Path.Combine(hgRoot, "authormap.txt"))
+            authorMap = File.ReadAllLines(Path.Combine(hgRoot, "authormap.txt"))
                       .Select(l => l.Split('='))
                       .ToDictionary(x => x[0], x => x[1]);
+            reviewerMap = File.ReadAllLines(Path.Combine(hgRoot, "reviewermap.txt"))
+                              .Select(l => l.Split('='))
+                              .SelectMany(x => x[0].Split(',').Select(r => new { key = r, val = x[1] }))
+                              .ToDictionary(x => x.key, x => x.val);
+            authors = GetAuthors();
         }
 
         public string GetData()
@@ -41,6 +48,14 @@ namespace HgStats.Services
             return header + string.Join(Environment.NewLine, info.Select(i => $"{i.author},{i.reviewer},{i.count},0"));
         }
 
+        private HashSet<string> GetAuthors()
+        {
+            var command = $"hg log -T \"{{author}}{newLine}\"";
+            var log = CmdHelper.RunViaFile(CD, command);
+
+            return new HashSet<string>(log);
+        }
+
         private List<Commit> GetCommits()
         {
             var dateRange = "-d \"jan 2018 to now\" ";
@@ -53,29 +68,46 @@ namespace HgStats.Services
             foreach (var line in log)
             {
                 if (line.StartsWith(authorPrefix))
-                {
-                    var currentAuthor = line.Replace(authorPrefix, string.Empty).Trim();
-                    if (map.ContainsKey(currentAuthor))
-                        currentAuthor = map[currentAuthor];
-
-                    current.Author = currentAuthor;
-                }
+                    current.Author = GetAuthor(line);
 
                 if (line.StartsWith(reviewPrefix))
-                    current.Reviewers = line
-                                        .Replace(reviewPrefix, string.Empty)
-                                        .Split(new[] { ",", " " }, StringSplitOptions.RemoveEmptyEntries)
-                                        .ToList();
+                    current.Reviewers = GetReviewers(line);
 
                 if (line == border)
                 {
-                    if (current.Reviewers != null)
+                    if (current.Reviewers != null && current.Reviewers.Any())
                         commits.Add(current);
                     current = new Commit();
                 }
             }
 
             return commits;
+        }
+
+        private string GetAuthor(string line)
+        {
+            var currentAuthor = line.Replace(authorPrefix, string.Empty).Trim();
+
+            return authorMap.ContainsKey(currentAuthor)
+                ? authorMap[currentAuthor]
+                : currentAuthor;
+        }
+
+        private List<string> GetReviewers(string line)
+        {
+            var currentReviewers = new List<string>();
+            var rawReviewers = line
+                               .Replace(reviewPrefix, string.Empty)
+                               .Split(new[] { ",", " " }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var reviewer in rawReviewers)
+            {
+                if (reviewerMap.ContainsKey(reviewer))
+                    currentReviewers.Add(reviewerMap[reviewer]);
+                else if (authors.Contains(reviewer))
+                    currentReviewers.Add(reviewer);
+            }
+
+            return currentReviewers;
         }
     }
 
