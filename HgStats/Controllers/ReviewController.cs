@@ -17,9 +17,9 @@ namespace HgStats.Controllers
             return View();
         }
 
-        public ActionResult Data()
+        public ActionResult Data(string from, string to)
         {
-            return Content(reviewService.GetData());
+            return Content(reviewService.GetData(from, to));
         }
     }
 }

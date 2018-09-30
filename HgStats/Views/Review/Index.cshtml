@@ -65,7 +65,7 @@
         .attr("transform", `translate(${width / 2},${height / 2})`);
 
     // Load our data file…
-    d3.csv("/Review/Data", type, function(error, data) {
+    d3.csv("/Review/Data?from=jan 2018&to=now", type, function(error, data) {
             if (error) throw error;
 
             var personByName = d3.map(),

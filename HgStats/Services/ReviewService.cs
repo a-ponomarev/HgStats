@@ -33,9 +33,9 @@ namespace HgStats.Services
             authors = GetAuthors();
         }
 
-        public string GetData()
+        public string GetData(string from, string to)
         {
-            var commits = GetCommits();
+            var commits = GetCommits(from, to);
             var info = commits
                        .SelectMany(c => c.Reviewers.Select(r => new { author = c.Author, reviewer = r }))
                        .GroupBy(p => p)
@@ -53,9 +53,9 @@ namespace HgStats.Services
             return new HashSet<string>(log);
         }
 
-        private List<Commit> GetCommits()
+        private List<Commit> GetCommits(string from, string to)
         {
-            var dateRange = "-d \"jan 2018 to now\" ";
+            var dateRange = $"-d \"{from} to {to}\" ";
 
             var command = $"hg log {dateRange} -T \"{authorPrefix}{{author}}{newLine}{{desc}}{newLine}{border}{newLine}\"";
             var log = CmdHelper.RunViaFile(CD, command);
