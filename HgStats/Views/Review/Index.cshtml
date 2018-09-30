@@ -18,8 +18,8 @@
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
-    const width = 900;
-    const height = 900;
+    const width = document.body.clientWidth * 0.5;
+    const height = width;
     const outerRadius = Math.min(width, height) / 2 - 4;
     const innerRadius = outerRadius - 20;
 
