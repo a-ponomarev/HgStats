@@ -1,0 +1,7 @@
+syntax: glob
+
+.idea
+
+packages
+*/bin
+*/obj
