@@ -22,10 +22,7 @@ namespace HgStats.Services
 
         public ReviewService()
         {
-            //https://stackoverflow.com/questions/4107625/how-can-i-convert-assembly-codebase-into-a-filesystem-path-in-c
-            var assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-
-            hgRoot = CmdHelper.Run($"cd {assemblyDir}", "hg root").First();
+            hgRoot = new SettingsService().Settings.HgRoot;
             authorMap = File.ReadAllLines(Path.Combine(hgRoot, "authormap.txt"))
                       .Select(l => l.Split('='))
                       .ToDictionary(x => x[0], x => x[1]);
