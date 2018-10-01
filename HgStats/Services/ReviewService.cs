@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using HgStats.Helpers;
 
 namespace HgStats.Services
@@ -59,8 +58,8 @@ namespace HgStats.Services
                        .GroupBy(p => p)
                        .Select(g => new { g.Key.author, g.Key.reviewer, count = g.Count() });
 
-            var header = $"author,review,amount,risk{Environment.NewLine}";
-            return header + string.Join(Environment.NewLine, info.Select(i => $"{i.author},{i.reviewer},{i.count},0"));
+            var header = $"author,review,amount{Environment.NewLine}";
+            return header + string.Join(Environment.NewLine, info.Select(i => $"{i.author},{i.reviewer},{i.count}"));
         }
 
         private HashSet<string> GetAuthors()
