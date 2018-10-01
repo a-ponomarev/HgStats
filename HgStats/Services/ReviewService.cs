@@ -68,7 +68,7 @@ namespace HgStats.Services
             var command = $"hg log -T \"{{author}}{newLine}\"";
             var log = CmdHelper.RunViaFile(CD, command);
 
-            return new HashSet<string>(log);
+            return new HashSet<string>(log.Select(MapAuthor));
         }
 
         private List<Commit> GetCommits(string from, string to)
@@ -103,9 +103,14 @@ namespace HgStats.Services
         {
             var currentAuthor = line.Replace(authorPrefix, string.Empty).Trim();
 
-            return authorMap.ContainsKey(currentAuthor)
-                ? authorMap[currentAuthor]
-                : currentAuthor;
+            return MapAuthor(currentAuthor);
+        }
+
+        private string MapAuthor(string author)
+        {
+            return authorMap.ContainsKey(author)
+                ? authorMap[author]
+                : author;
         }
 
         private List<string> GetReviewers(string line)
