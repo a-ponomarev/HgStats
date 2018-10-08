@@ -67,6 +67,9 @@
     d3.csv("/Review/Data?from=jan 2018&to=now", type, function(error, data) {
             if (error) throw error;
 
+            // todo multiple roots front-end
+            data = data.filter(d => d.root === data[0].root);
+
             var personByName = d3.map(),
                 personIndex = -1,
                 personByIndex = [];

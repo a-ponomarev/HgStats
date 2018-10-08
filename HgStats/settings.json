@@ -1,3 +1,5 @@
 {
-  HgRoot: "C:\\Cabinet",
+  HgRoots: [
+    "C:\\Cabinet",
+  ],
 }

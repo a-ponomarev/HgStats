@@ -21,9 +21,9 @@ namespace HgStats.Services
         private string ReviewerMapPath => Path.Combine(hgRoot, "reviewermap.txt");
         private string CD => $"cd {hgRoot}";
 
-        public ReviewService()
+        public ReviewService(string hgRoot)
         {
-            hgRoot = new SettingsService().Settings.HgRoot;
+            this.hgRoot = hgRoot;
             authorMap = GetAuthorMap();
             reviewerMap = GetReviewerMap();
             authors = GetAuthors();
@@ -50,16 +50,12 @@ namespace HgStats.Services
                 .ToDictionary(x => x.key, x => x.val);
         }
 
-        public string GetData(string from, string to)
+        public IEnumerable<(string author, string reviewer, int count)> GetData(string from, string to)
         {
-            var commits = GetCommits(from, to);
-            var info = commits
-                       .SelectMany(c => c.Reviewers.Select(r => new { author = c.Author, reviewer = r }))
-                       .GroupBy(p => p)
-                       .Select(g => new { g.Key.author, g.Key.reviewer, count = g.Count() });
-
-            var header = $"author,review,amount{Environment.NewLine}";
-            return header + string.Join(Environment.NewLine, info.Select(i => $"{i.author},{i.reviewer},{i.count}"));
+            return GetCommits(from, to)
+                .SelectMany(c => c.Reviewers.Select(r => (author : c.Author, reviewer: r)))
+                .GroupBy(p => p)
+                .Select(g => (author: g.Key.author, reviewer: g.Key.reviewer, count: g.Count()));
         }
 
         private HashSet<string> GetAuthors()

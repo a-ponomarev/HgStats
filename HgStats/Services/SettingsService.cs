@@ -17,6 +17,6 @@ namespace HgStats.Services
 
     public class Settings
     {
-        public string HgRoot { get; set; }
+        public string[] HgRoots { get; set; }
     }
 }
