@@ -25,7 +25,7 @@
 
     var format = d3.format(",.3r");
 
-    // Square matrices, asynchronously loaded; credits is the transpose of debits.
+    // Square matrices, asynchronously loaded; reviews is the transpose of commits.
     var commitsToReview = [],
         reviewToCommits = [];
 
@@ -71,22 +71,22 @@
                 personIndex = -1,
                 personByIndex = [];
 
-            // Compute a unique index for each country.
-        data.forEach(function(d) {
-            if (personByName.has(d.author)) {
-                d.author = personByName.get(d.author);
-            } else {
-                personByName.set(d.author, d.author = { name: d.author, index: ++personIndex });
-            }
+            // Compute a unique index for each person.
+            data.forEach(function(d) {
+                if (personByName.has(d.author)) {
+                    d.author = personByName.get(d.author);
+                } else {
+                    personByName.set(d.author, d.author = { name: d.author, index: ++personIndex });
+                }
+    
+                if (personByName.has(d.review)) {
+                    d.review = personByName.get(d.review);
+                } else {
+                    personByName.set(d.review, d.review = { name: d.review, index: ++personIndex });
+                }
+            });
 
-            if (personByName.has(d.review)) {
-                d.review = personByName.get(d.review);
-            } else {
-                personByName.set(d.review, d.review = { name: d.review, index: ++personIndex });
-            }
-        });
-
-            // Initialize a square matrix of debits and credits.
+            // Initialize a square matrix of commits and reviews.
             for (let i = 0; i <= personIndex; i++) {
                 commitsToReview[i] = [];
                 reviewToCommits[i] = [];
@@ -96,7 +96,7 @@
                 }
             }
 
-            // Populate the matrices, and stash a map from index to country.
+            // Populate the matrices, and stash a map from index to person.
             data.forEach(function(d) {
                 commitsToReview[d.author.index][d.review.index] = d;
                 reviewToCommits[d.review.index][d.author.index] = d;
