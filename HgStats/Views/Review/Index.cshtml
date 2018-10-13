@@ -25,10 +25,6 @@
 
     var format = d3.format(",.3r");
 
-    // Square matrices, asynchronously loaded; reviews is the transpose of commits.
-    var commitsToReview = [],
-        reviewToCommits = [];
-
     // The chord layout, for computing the angles of chords and groups.
     var layout = d3.layout.chord()
         .sortGroups(d3.descending)
@@ -50,38 +46,39 @@
     var chord = d3.svg.chord()
         .radius(innerRadius);
 
-    // Add an SVG element for each diagram, and translate the origin to the center.
-    var svg = d3.select("body").selectAll("div")
-        .data([commitsToReview, reviewToCommits])
-        .enter().append("div")
-        .style("display", "inline-block")
-        .style("width", `${width}px`)
-        .style("height", `${height}px`)
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-        .attr("transform", `translate(${width / 2},${height / 2})`);
-
     // Load our data file…
     d3.csv("/Review/Data?from=jan 2018&to=now", type, function(error, data) {
-            if (error) throw error;
+        if (error) throw error;
 
-            // todo multiple roots front-end
-            data = data.filter(d => d.root === data[0].root);
+        var roots = [...new Set(data.map(i => i.root))];
+
+        roots.forEach((root, rootInd) => {
+            var divRootId = `root${rootInd}`;
+
+            d3.select("body")
+                .append("div")
+                .attr("id", divRootId)
+                .append("h1")
+                .text(root);
+
+            var rootData = data.filter(i => i.root === root);
+
+            // Square matrices, asynchronously loaded; reviews is the transpose of commits.
+            var commitsToReview = [],
+                reviewToCommits = [];
 
             var personByName = d3.map(),
                 personIndex = -1,
                 personByIndex = [];
 
             // Compute a unique index for each person.
-            data.forEach(function(d) {
+            rootData.forEach(function(d) {
                 if (personByName.has(d.author)) {
                     d.author = personByName.get(d.author);
                 } else {
                     personByName.set(d.author, d.author = { name: d.author, index: ++personIndex });
                 }
-    
+
                 if (personByName.has(d.review)) {
                     d.review = personByName.get(d.review);
                 } else {
@@ -100,12 +97,25 @@
             }
 
             // Populate the matrices, and stash a map from index to person.
-            data.forEach(function(d) {
+            rootData.forEach(function(d) {
                 commitsToReview[d.author.index][d.review.index] = d;
                 reviewToCommits[d.review.index][d.author.index] = d;
                 personByIndex[d.author.index] = d.author;
                 personByIndex[d.review.index] = d.review;
             });
+
+            // Add an SVG element for each diagram, and translate the origin to the center.
+            var svg = d3.select("#" + divRootId).selectAll("div")
+                .data([commitsToReview, reviewToCommits])
+                .enter().append("div")
+                .style("display", "inline-block")
+                .style("width", `${width}px`)
+                .style("height", `${height}px`)
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width / 2},${height / 2})`);
 
             // For each diagram…
             svg.each(function(matrix, j) {
@@ -137,8 +147,8 @@
                     .style("fill", d => fill(personByIndex[d.index].amount % colors.length))
                     .attr("id", d => `group${d.index}-${j}`)
                     .attr("d", arc)
-                    .on("mouseover", fade(.1))
-                    .on("mouseout", fade(1))
+                    .on("mouseover", fade(svg, .1))
+                    .on("mouseout", fade(svg, 1))
                     .append("title")
                     .text(d => `${personByIndex[d.index].name} ${j ? "reviewed" : "was reviewed"} ${format(d.value)}times`);
 
@@ -152,6 +162,7 @@
                     .text(d => personByIndex[d.index].name);
             });
         });
+    });
 
     function type(d) {
         d.amount = +d.amount;
@@ -163,7 +174,7 @@
         return this.amount;
     }
 
-    function fade(opacity) {
+    function fade(svg, opacity) {
         return function(g, i) {
             svg.selectAll(".chord")
                 .filter(d => d.source.index != i && d.target.index != i)
