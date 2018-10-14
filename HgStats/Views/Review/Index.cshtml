@@ -16,7 +16,11 @@
     }
 </style>
 <body>
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <script>
     const width = document.body.clientWidth * 0.5;
     const height = width;
@@ -46,8 +50,16 @@
     var chord = d3.svg.chord()
         .radius(innerRadius);
 
-    // Load our data file…
-    d3.csv("/Review/Data?from=jan 2018&to=now", type, function(error, data) {
+    function reloadData(from, to) {
+        clearData();
+        d3.csv(`/Review/Data?from=${from.format('YYYY-MM-DD')}&to=${to.format('YYYY-MM-DD')}`, type, updateData);
+    }
+
+    function clearData(){
+        d3.select("#data").html("");
+    }
+
+    function updateData(error, data) {
         if (error) throw error;
 
         var roots = [...new Set(data.map(i => i.root))];
@@ -55,7 +67,7 @@
         roots.forEach((root, rootInd) => {
             var divRootId = `root${rootInd}`;
 
-            d3.select("body")
+            d3.select("#data")
                 .append("div")
                 .attr("id", divRootId)
                 .append("h1")
@@ -162,7 +174,7 @@
                     .text(d => personByIndex[d.index].name);
             });
         });
-    });
+    }
 
     function type(d) {
         d.amount = +d.amount;
@@ -182,4 +194,37 @@
                 .style("opacity", opacity);
         }
     }
+
+    $(function() {
+        var start = moment().startOf('year');
+        var end = moment();
+
+        function cb(start, end) {
+            $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            reloadData(start, end);
+        }
+
+        $('#reportrange').daterangepicker({
+            startDate: start,
+            endDate: end,
+            ranges: {
+                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'Last 365 Days': [moment().subtract(364, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment()],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                'This Year': [moment().startOf('year'), moment()],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')],
+                'Last 20 Years': [moment().subtract(20, 'year').startOf('year'), moment()],
+            }
+        }, cb);
+
+        cb(start, end);
+    });
 </script>
+<div id="reportrange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+    <i class="fa fa-calendar"></i>&nbsp;
+    <span></span> <i class="fa fa-caret-down"></i>
+</div>
+<div id="data"></div>
+</body>
