@@ -45,6 +45,7 @@
     <Compile Include="Helpers\CmdHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\ReviewService.cs" />
+    <Compile Include="Services\ReviewServiceCollection.cs" />
     <Compile Include="Services\SettingsService.cs" />
   </ItemGroup>
   <ItemGroup>

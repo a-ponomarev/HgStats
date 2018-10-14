@@ -17,6 +17,8 @@ namespace HgStats.Services
         private readonly Dictionary<string, string> authorMap;
         private readonly Dictionary<string, string> reviewerMap;
         private readonly HashSet<string> authors;
+        private readonly Dictionary<string, List<Commit>> cache = new Dictionary<string, List<Commit>>();
+
         private string AuthorMapPath => Path.Combine(hgRoot, "authormap.txt");
         private string ReviewerMapPath => Path.Combine(hgRoot, "reviewermap.txt");
         private string CD => $"cd {hgRoot}";
@@ -50,12 +52,12 @@ namespace HgStats.Services
                 .ToDictionary(x => x.key, x => x.val);
         }
 
-        public IEnumerable<(string author, string reviewer, int count)> GetData(string from, string to)
+        public IEnumerable<(string root, string author, string reviewer, int count)> GetData(string from, string to)
         {
-            return GetCommits(from, to)
+            return GetCommitsCached(from, to)
                 .SelectMany(c => c.Reviewers.Select(r => (author : c.Author, reviewer: r)))
                 .GroupBy(p => p)
-                .Select(g => (author: g.Key.author, reviewer: g.Key.reviewer, count: g.Count()));
+                .Select(g => (root: hgRoot, author: g.Key.author, reviewer: g.Key.reviewer, count: g.Count()));
         }
 
         private HashSet<string> GetAuthors()
@@ -66,10 +68,17 @@ namespace HgStats.Services
             return new HashSet<string>(log.Select(MapAuthor));
         }
 
-        private List<Commit> GetCommits(string from, string to)
+        private List<Commit> GetCommitsCached(string from, string to)
         {
             var dateRange = $"-d \"{from} to {to}\" ";
+            if (!cache.ContainsKey(dateRange))
+                cache[dateRange] = GetCommits(dateRange); 
+            return cache[dateRange];
+            
+        }
 
+        private List<Commit> GetCommits(string dateRange)
+        {
             var command = $"hg log {dateRange} -T \"{authorPrefix}{{author}}{newLine}{{desc}}{newLine}{border}{newLine}\"";
             var log = CmdHelper.RunViaFile(CD, command);
 
