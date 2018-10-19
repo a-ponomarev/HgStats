@@ -1,8 +1,33 @@
 ﻿<!DOCTYPE html>
 <meta charset="utf-8">
 <style>
+    body {
+        font-family: helvetica, arial, sans-serif;
+    }
+
+    #reportrange{
+        background: #fff;
+        cursor: pointer;
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        width: 100%;
+        display: inline;
+    }
+
+    .rootTitle {
+        text-align: center;
+    }
+
+    .diagram {
+        display: inline-block;
+    }
+
+    .diagram .hint {
+        text-align: center;
+    }
+
     .group text {
-        font: 12px helvetica, arial, sans-serif;
+        font-size: 12px;
         pointer-events: none;
     }
 
@@ -71,6 +96,7 @@
                 .append("div")
                 .attr("id", divRootId)
                 .append("h1")
+                .attr("class", "rootTitle")
                 .text(root);
 
             var rootData = data.filter(i => i.root === root);
@@ -120,7 +146,7 @@
             var svg = d3.select("#" + divRootId).selectAll("div")
                 .data([commitsToReview, reviewToCommits])
                 .enter().append("div")
-                .style("display", "inline-block")
+                .attr("class", "diagram")
                 .style("width", `${width}px`)
                 .style("height", `${height}px`)
                 .append("svg")
@@ -224,8 +250,8 @@
         cb(start, end);
     });
 </script>
-<div id="reportrange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
-    <i class="fa fa-calendar"></i>&nbsp;
+<div id="reportrange">
+    <i class="fa fa-calendar"></i>
     <span></span> <i class="fa fa-caret-down"></i>
 </div>
 <div id="data"></div>
