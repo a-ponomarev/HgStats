@@ -8,11 +8,6 @@ namespace HgStats.Controllers
 {
     public class ReviewController : Controller
     {
-        public ActionResult Index()
-        {
-            return View();
-        }
-
         public ActionResult Data(string from, string to)
         {
             var header = $"root,author,review,amount{Environment.NewLine}";

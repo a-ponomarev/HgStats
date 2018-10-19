@@ -5,3 +5,5 @@ syntax: glob
 packages
 */bin
 */obj
+
+node_modules
