@@ -52,7 +52,7 @@
     const outerRadius = Math.min(width, height) / 2 - 90;
     const innerRadius = outerRadius - 5;
 
-    var format = d3.format(",.3r");
+    var format = d3.format();
 
     // The chord layout, for computing the angles of chords and groups.
     var layout = d3.layout.chord()
@@ -188,7 +188,7 @@
                     .on("mouseover", fade(svg, .1))
                     .on("mouseout", fade(svg, 1))
                     .append("title")
-                    .text(d => `${personByIndex[d.index].name} ${j ? "reviewed" : "was reviewed"} ${format(d.value)}times`);
+                    .text(d => `${personByIndex[d.index].name} ${j ? "reviewed" : "was reviewed"} ${format(d.value)} times`);
 
                 // Add the group label.
                 g.append("svg:text")
