@@ -142,6 +142,10 @@
                 personByIndex[d.review.index] = d.review;
             });
 
+            rootData.forEach(function(d) {
+                d.amountBack = commitsToReview[d.review.index][d.author.index].amount | 0;
+            });
+
             // Add an SVG element for each diagram, and translate the origin to the center.
             var svg = d3.select("#" + divRootId).selectAll("div")
                 .data([commitsToReview, reviewToCommits])
@@ -171,7 +175,8 @@
                     .style("stroke", d => d3.rgb(fill(d.source.value.amount % colors.length)).darker())
                     .attr("d", chord)
                     .append("title")
-                    .text(d => `${d.source.value.review.name} reviewed ${d.source.value.author.name} ${format(d.source.value)} times`);
+                    .text(d => `${d.source.value.review.name} reviewed ${d.source.value.amount} times, ` +
+                        `${d.source.value.author.name} ${d.source.value.amountBack} times`);
 
                 // Add groups.
                 const g = svg.selectAll(".group")
