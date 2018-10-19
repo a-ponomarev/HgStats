@@ -157,7 +157,7 @@
                 // Add the group arc.
                 g.append("path")
                     .style("fill", d => fill(personByIndex[d.index].amount % colors.length))
-                    .attr("id", d => `group${d.index}-${j}`)
+                    .attr("id", d => `group${d.index}-${j}-${rootInd}`)
                     .attr("d", arc)
                     .on("mouseover", fade(svg, .1))
                     .on("mouseout", fade(svg, 1))
@@ -170,7 +170,7 @@
                     .attr("x", 6)
                     .attr("dy", 15)
                     .append("textPath")
-                    .attr("xlink:href", d => `#group${d.index}-${j}`)
+                    .attr("xlink:href", d => `#group${d.index}-${j}-${rootInd}`)
                     .text(d => personByIndex[d.index].name);
             });
         });
