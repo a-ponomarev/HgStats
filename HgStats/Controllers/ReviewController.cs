@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using HgStats.Services;
+using Newtonsoft.Json;
 
 namespace HgStats.Controllers
 {
@@ -15,10 +16,9 @@ namespace HgStats.Controllers
 
         public ActionResult Data(string from, string to)
         {
-            var header = $"root,author,review,amount{Environment.NewLine}";
-            var lines = GetData(from, to).Select(d => $"{d.root},{d.author},{d.reviewer},{d.count}");
+            var lines = GetData(from, to).Select(d => new {d.root, d.author, review = d.reviewer, amount = d.count});
 
-            return Content(header + string.Join(Environment.NewLine, lines));
+            return Content(JsonConvert.SerializeObject(lines));
         }
 
         private static IEnumerable<(string root, string author, string reviewer, int count)> GetData(string @from, string to)
