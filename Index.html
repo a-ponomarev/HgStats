@@ -50,6 +50,8 @@
 <script>if (window.module) module = window.module;</script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <script>
+    const reviewService = require('./reviewService.js');
+    
     const width = document.body.clientWidth * 0.5 - 9;
     const height = width;
     const outerRadius = Math.min(width, height) / 2 - 90;
@@ -80,16 +82,14 @@
 
     function reloadData(from, to) {
         clearData();
-        d3.json(`http://localhost:5000/Review/Data?from=${from.format('YYYY-MM-DD')}&to=${to.format('YYYY-MM-DD')}`, updateData);
+        updateData(reviewService.getData());
     }
 
     function clearData(){
         d3.select("#data").html("");
     }
 
-    function updateData(error, data) {
-        if (error) throw error;
-
+    function updateData(data) {
         data.forEach(d => d.valueOf = () => d.amount); // todo kill
 
         var roots = [...new Set(data.map(i => i.root))];
