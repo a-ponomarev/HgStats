@@ -82,7 +82,7 @@
 
     function reloadData(from, to) {
         clearData();
-        updateData(reviewService.getData());
+        updateData(reviewService.getData(from, to));
     }
 
     function clearData(){
