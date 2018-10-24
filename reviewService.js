@@ -13,12 +13,11 @@ exports.getData = (from, to) => {
 };
 
 function getRootData (root, from, to) {
-    let commits = getCommits(from, to, root);
-    const groups = _.groupBy(commits, c => c.author + ' + ' + c.review);
+    const commits = getCommits(from, to, root);
+    const reviewPairs = _.flatten(commits.map(c => c.review.map(r => ({author: c.author, review: r}))));
+    const groups = _.groupBy(reviewPairs, c => c.author + ' + ' + c.review);
 
-    return _.map(groups, g => {
-        return {root: root, author: g[0].author, review: g[0].review || g[0].author, amount: g.length};
-    });
+    return _.map(groups, g => ({root: root, author: g[0].author, review: g[0].review || g[0].author, amount: g.length}));
 }
 
 function getCommits(from, to, root) {
@@ -27,21 +26,27 @@ function getCommits(from, to, root) {
     const log = runCommand(root, command);
 
     let commits = [];
-    let current = {};
+    let current = createEmptyCommit();
     log.split('\n').forEach(line => {
         if (line.startsWith(authorPrefix))
             current.author = line.replace(authorPrefix, '').trim();
 
-        if (line.startsWith(reviewPrefix))
-            current.review = line.replace(reviewPrefix, '').trim();
+        if (line.startsWith(reviewPrefix)) {
+            let tokens = line.replace(reviewPrefix, '').split(/[\s,]+/);
+            current.review = _.filter(tokens, t => t);
+        }
 
         if (line === border) {
             commits.push(current);
-            current = {};
+            current = createEmptyCommit();
         }
     });
 
     return commits;
+}
+
+function createEmptyCommit() {
+    return {review: []};
 }
 
 function runCommand(root, command) {
