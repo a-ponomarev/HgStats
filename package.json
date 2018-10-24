@@ -12,6 +12,7 @@
     "statistics"
   ],
   "devDependencies": {
-    "electron": "^3.0.3"
+    "electron": "^3.0.3",
+    "underscore": "^1.9.1"
   }
 }
