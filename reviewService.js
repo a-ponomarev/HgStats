@@ -52,11 +52,15 @@ function getCommits(from, to, root) {
 }
 
 function initAuthorMap(root) {
-    if(authorMaps[root])
+    if (authorMaps[root])
+        return;
+
+    const mapPath = path.join(root, 'authormap.txt');
+    if (!fs.existsSync(mapPath))
         return;
 
     authorMaps[root] = [];
-    fs.readFileSync(path.join(root, 'authormap.txt'))
+    fs.readFileSync(mapPath)
         .toString()
         .split(/[\r\n]/)
         .filter(l => l)
@@ -91,7 +95,10 @@ function getReview(line, root) {
 }
 
 function mapAuthor(author, root) {
-    return authorMaps[root][author] || author;
+    const map = authorMaps[root];
+    return map
+        ? map[author] || author
+        : author;
 }
 
 function createEmptyCommit() {
