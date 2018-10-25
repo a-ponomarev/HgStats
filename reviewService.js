@@ -10,6 +10,8 @@ const reviewPrefix = "review:";
 const border = "-------";
 const newLine = "\\n";
 const authorMaps = {};
+const authorLists = {};
+const unknownReviewers = new Set();
 
 exports.getData = (from, to) => {
     return _.flatten(settings.hgRoots.map(root => getRootData(root, from, to)));
@@ -24,6 +26,7 @@ function getRootData (root, from, to) {
 }
 
 function getCommits(from, to, root) {
+    initAuthorList(root);
     initAuthorMap(root);
 
     const dateRange = `-d \"${from.format('YYYY-MM-DD')} to ${to.format('YYYY-MM-DD')}\" `;
@@ -60,7 +63,14 @@ function initAuthorMap(root) {
         .forEach(line => {
             const tokens = line.split('=');
             authorMaps[root][tokens[0]] = tokens[1];
+            authorLists[root].add(tokens[1]);
         });
+}
+
+function initAuthorList(root) {
+    const command = `hg log -T \"{author}${newLine}\"`;
+    const log = runCommand(root, command);
+    authorLists[root] = new Set(log.split('\n').filter(l => l));
 }
 
 function getAuthor(line, root) {
@@ -69,8 +79,15 @@ function getAuthor(line, root) {
 }
 
 function getReview(line, root) {
-    let tokens = line.replace(reviewPrefix, '').split(/[\s,]+/);
-    return _.filter(tokens, t => t).map(author => mapAuthor(author, root));
+    const result = [];
+    line.replace(reviewPrefix, '')
+        .split(/[\s,]+/)
+        .filter(t => t)
+        .map(author => mapAuthor(author, root))
+        .forEach(author => authorLists[root].has(author)
+            ? result.push(author)
+            : unknownReviewers.add(author));
+    return result;
 }
 
 function mapAuthor(author, root) {
