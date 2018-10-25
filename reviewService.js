@@ -14,7 +14,17 @@ const authorLists = {};
 const unknownReviewers = new Set();
 
 exports.getData = (from, to) => {
-    return _.flatten(settings.hgRoots.map(root => getRootData(root, from, to)));
+    const rootResults = _.flatten(settings.hgRoots.map(root => getRootData(root, from, to)));
+
+    const groups = _.groupBy(rootResults, c => c.author + ' + ' + c.review);
+    const total = _.map(groups, g => ({
+        root: 'Total',
+        author: g[0].author,
+        review: g[0].review,
+        amount: g.reduce((acc, el) => acc + el.amount, 0)
+    }));
+
+    return total.concat(rootResults);
 };
 
 function getRootData (root, from, to) {
@@ -22,7 +32,12 @@ function getRootData (root, from, to) {
     const reviewPairs = _.flatten(commits.map(c => c.review.map(r => ({author: c.author, review: r}))));
     const groups = _.groupBy(reviewPairs, c => c.author + ' + ' + c.review);
 
-    return _.map(groups, g => ({root: root, author: g[0].author, review: g[0].review || g[0].author, amount: g.length}));
+    return _.map(groups, g => ({
+        root: root,
+        author: g[0].author,
+        review: g[0].review || g[0].author,
+        amount: g.length
+    }));
 }
 
 function getCommits(from, to, root) {
