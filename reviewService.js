@@ -55,7 +55,8 @@ function initAuthorMap(root) {
     authorMaps[root] = [];
     fs.readFileSync(path.join(root, 'authormap.txt'))
         .toString()
-        .split("\n")
+        .split(/[\r\n]/)
+        .filter(l => l)
         .forEach(line => {
             const tokens = line.split('=');
             authorMaps[root][tokens[0]] = tokens[1];
