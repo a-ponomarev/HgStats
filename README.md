@@ -27,6 +27,12 @@ npm install
 npm start
 ```
 
+Additional tools
+```bash
+# To analyze authors and build authormap.txt
+node .\getAuthors.js
+```
+
 ## To Develop
 ```bash
 # If you need to generate test repos

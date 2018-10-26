@@ -11,9 +11,13 @@ const border = "-------";
 const newLine = "\\n";
 const authorMaps = {};
 const authorLists = {};
-const unknownReviewers = new Set();
+const unknownReviewers = {};
 
-exports.getData = (from, to) => {
+exports.getData = getData;
+exports.getCommits = getCommits;
+exports.unknownReviewers = unknownReviewers;
+
+function getData(from, to) {
     const rootResults = _.flatten(settings.hgRoots.map(root => getRootData(root, from, to)));
 
     const groups = _.groupBy(rootResults, c => c.author + ' + ' + c.review);
@@ -43,6 +47,7 @@ function getRootData (root, from, to) {
 function getCommits(from, to, root) {
     initAuthorList(root);
     initAuthorMap(root);
+    unknownReviewers[root] = new Set();
 
     const dateRange = `-d \"${from.format('YYYY-MM-DD')} to ${to.format('YYYY-MM-DD')}\" `;
     const command = `hg log ${dateRange} -T \"${authorPrefix}{author}${newLine}{desc}${newLine}${border}${newLine}\"`;
@@ -105,7 +110,7 @@ function getReview(line, root) {
         .map(author => mapAuthor(author, root))
         .forEach(author => authorLists[root].has(author)
             ? result.push(author)
-            : unknownReviewers.add(author));
+            : unknownReviewers[root].add(author));
     return result;
 }
 
