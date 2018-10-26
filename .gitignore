@@ -1,11 +1,3 @@
-syntax: glob
-
 .idea
-
-packages
-*/bin
-*/obj
-
 node_modules
-
 /Test*
