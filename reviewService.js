@@ -1,7 +1,7 @@
 const _ = require('underscore');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { runCommand } = require('./cmd.js');
 
 const settings = require('./settings.json');
 
@@ -118,11 +118,6 @@ function mapAuthor(author, root) {
 
 function createEmptyCommit() {
     return {review: []};
-}
-
-function runCommand(root, command) {
-    const fullCommand = `cd ${root} && ${command}`;
-    return execSync(fullCommand, {encoding: 'utf8'});
 }
 
 function getRandomString() {

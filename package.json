@@ -4,7 +4,8 @@
   "description": "Yet another tool for tracking statistics in Mercurial VCS",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "test": "node .\\generateTestRepo.js" 
   },
   "repository": "https://github.com/a-ponomarev/HgStats",
   "keywords": [

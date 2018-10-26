@@ -1,0 +1,18 @@
+{
+  ".\\TestRepoOne" : [
+    {"author": "a", "review": "b", "amount": 10},
+    {"author": "a", "review": "c", "amount": 5},
+    {"author": "a", "review": "d", "amount": 6},
+    {"author": "b", "review": "a", "amount": 2},
+    {"author": "c", "review": "a", "amount": 3},
+    {"author": "c", "review": "b", "amount": 2},
+    {"author": "d", "review": "a", "amount": 2}
+  ],
+  ".\\TestRepoTwo" : [
+    {"author": "a", "review": "c", "amount": 5},
+    {"author": "a", "review": "d", "amount": 6},
+    {"author": "b", "review": "a", "amount": 2},
+    {"author": "c", "review": "a", "amount": 3},
+    {"author": "d", "review": "a", "amount": 2}
+  ]
+}
