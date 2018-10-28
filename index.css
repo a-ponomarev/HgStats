@@ -1,0 +1,38 @@
+body {
+    font-family: helvetica, arial, sans-serif;
+}
+
+#reportrange{
+    background: #fff;
+    cursor: pointer;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    width: 100%;
+    display: inline;
+}
+
+.rootTitle {
+    text-align: center;
+}
+
+.diagram {
+    display: inline-block;
+}
+
+.diagram .hint {
+    text-align: center;
+}
+
+.group text {
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.group path {
+    stroke: #000;
+}
+
+.chord {
+    stroke-width: .75;
+    fill-opacity: .75;
+}
