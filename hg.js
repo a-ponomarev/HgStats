@@ -14,6 +14,22 @@ exports.getCommits = getCommits;
 exports.unknownReviewers = unknownReviewers;
 
 function getCommits(from, to, root) {
+    const dirPath = 'app_data';
+    const filePath = path.join(dirPath, `repo-${path.basename(root)}-${from.format('YYYY-MM-DD')}-${to.format('YYYY-MM-DD')}.json`);
+
+    if (!fs.existsSync(dirPath))
+        fs.mkdirSync(dirPath);
+
+    if (!fs.existsSync(filePath)) {
+        const commits = getCommitsInternal(from, to, root);
+        fs.writeFileSync(filePath, JSON.stringify(commits, null, 2));
+        return commits;
+    } else {
+        return JSON.parse(fs.readFileSync(filePath, {encoding: 'utf8'})); 
+    }
+}
+
+function getCommitsInternal(from, to, root) {
     initAuthorList(root);
     initAuthorMap(root);
     unknownReviewers[root] = new Set();
