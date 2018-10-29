@@ -1,8 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const moment = require('moment');
 const { runCommand } = require('./cmd.js');
 
 const authorPrefix = getRandomString();
+const datePrefix = getRandomString();
 const reviewPrefix = "review:";
 const border = "-------";
 const newLine = "\\n";
@@ -14,14 +16,19 @@ exports.getCommits = getCommits;
 exports.unknownReviewers = unknownReviewers;
 
 function getCommits(from, to, root) {
+    const allCommits = getAllCommitsCached(root);
+    return allCommits.filter(c => moment(c.date).isBetween(from, to));
+}
+
+function getAllCommitsCached(root) {
     const dirPath = 'app_data';
-    const filePath = path.join(dirPath, `repo-${path.basename(root)}-${from.format('YYYY-MM-DD')}-${to.format('YYYY-MM-DD')}.json`);
+    const filePath = path.join(dirPath, `repo-${path.basename(root)}.json`);
 
     if (!fs.existsSync(dirPath))
         fs.mkdirSync(dirPath);
 
     if (!fs.existsSync(filePath)) {
-        const commits = getCommitsInternal(from, to, root);
+        const commits = getAllCommits(root);
         fs.writeFileSync(filePath, JSON.stringify(commits, null, 2));
         return commits;
     } else {
@@ -29,18 +36,28 @@ function getCommits(from, to, root) {
     }
 }
 
-function getCommitsInternal(from, to, root) {
+function getAllCommits(root) {
     initAuthorList(root);
     initAuthorMap(root);
     unknownReviewers[root] = new Set();
 
-    const dateRange = `-d \"${from.format('YYYY-MM-DD')} to ${to.format('YYYY-MM-DD')}\" `;
-    const command = `hg log ${dateRange} -T \"${authorPrefix}{author}${newLine}{desc}${newLine}${border}${newLine}\"`;
+    const from = moment().subtract(20, 'year');
+    const to = moment();
+    const dateRange = `\"${from.format('YYYY-MM-DD')} to ${to.format('YYYY-MM-DD')}\"`;
+    const template = `\"${datePrefix}{date|rfc822date}${newLine}` + 
+        `${authorPrefix}{author}${newLine}` + 
+        `{desc}${newLine}` +
+        `${border}${newLine}\"`;
+
+    const command = `hg log -d ${dateRange} -T ${template}`; 
     const log = runCommand(root, command);
 
     let commits = [];
     let current = createEmptyCommit();
     log.split('\n').forEach(line => {
+        if (line.startsWith(datePrefix))
+            current.date = new Date(line.replace(datePrefix, '').trim());
+
         if (line.startsWith(authorPrefix))
             current.author = getAuthor(line, root);
 
